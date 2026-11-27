@@ -4,285 +4,757 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>배당주 적립기</title>
-  <!-- Tailwind CSS 로드 -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Inter 및 한글 가독성을 위한 Noto Sans KR 폰트 -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #f4f6f9;
+      --card: #ffffff;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --primary-light: #eff6ff;
+      --danger: #ef4444;
+      --danger-light: #fef2f2;
+      --success: #059669;
+      --success-light: #ecfdf5;
+      --text: #111827;
+      --subtext: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+
     * {
       box-sizing: border-box;
       -webkit-tap-highlight-color: transparent;
-      font-family: 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* 숫자 입력창 화살표 숨김 처리 */
-    input[type="number"]::-webkit-inner-spin-button,
-    input[type="number"]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
+    body {
       margin: 0;
-    }
-    input[type="number"] {
-      -moz-appearance: textfield;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
     }
 
-    /* 원형 다이얼 입체 그라데이션 및 터치 피드백 */
-    .circle-dial-btn {
-      background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8);
-      box-shadow: 0 12px 26px rgba(37, 99, 235, 0.32);
-      transition: transform 0.08s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.08s ease;
+    .app {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      padding: 16px 14px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
-    .circle-dial-btn:active {
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 2px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .reset-btn {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--subtext);
+      font-size: 0.78rem;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .reset-btn:active {
+      background: #f3f4f6;
+    }
+
+    .nav-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: #e5e7eb;
+      padding: 4px;
+      border-radius: 12px;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      padding: 9px 10px;
+      border-radius: 9px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--subtext);
+      cursor: pointer;
+    }
+
+    .nav-btn.active {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+
+    .view {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .view.active {
+      display: flex;
+    }
+
+    /* 상단 3개 종목 구분 카드 */
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .tab-card {
+      background: var(--card);
+      border: 2px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 7px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+      min-width: 0;
+    }
+
+    .tab-card.active {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .tab-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* 종목명 입력 + 우측 작은 원형 체크 버튼 가로 배치 */
+    .tab-name-edit {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .tab-name-input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      background: #ffffff;
+      font-size: 0.73rem;
+      font-weight: 700;
+      color: var(--text);
+      padding: 5px 5px;
+      line-height: 1.2;
+      outline: none;
+    }
+
+    .tab-name-input:focus {
+      border-color: var(--primary);
+    }
+
+    .tab-apply-btn {
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      border: none;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(37, 99, 235, 0.3);
+      transition: transform 0.08s ease, background-color 0.12s ease;
+    }
+
+    .tab-apply-btn:active {
+      background: var(--primary-dark);
+      transform: scale(0.92);
+    }
+
+    .tab-count {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .counter-card,
+    .confirm-card,
+    .history-card {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 16px 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .selected-title {
+      text-align: center;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--primary-dark);
+      background: var(--primary-light);
+      padding: 8px 12px;
+      border-radius: 10px;
+      word-break: keep-all;
+    }
+
+    .counter-body {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .circle-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .circle-dial {
+      width: 175px;
+      height: 175px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8);
+      color: #ffffff;
+      border: 6px solid #dbeafe;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.28);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+      padding: 10px;
+    }
+
+    .circle-dial:active {
+      transform: scale(0.95);
+    }
+
+    .dial-label {
+      font-size: 0.72rem;
+      opacity: 0.85;
+      margin-bottom: 2px;
+    }
+
+    .dial-number {
+      font-size: 2.1rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      word-break: break-all;
+      text-align: center;
+    }
+
+    .dial-hint {
+      font-size: 0.72rem;
+      margin-top: 6px;
+      background: rgba(255, 255, 255, 0.18);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .step-controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      width: 124px;
+      flex-shrink: 0;
+    }
+
+    .step-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .step-btn {
+      border: none;
+      border-radius: 9px;
+      padding: 9px 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .step-btn:active {
       transform: scale(0.94);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .step-btn.plus {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid #bfdbfe;
+    }
+
+    .step-btn.minus {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .section-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-sub {
+      font-size: 0.74rem;
+      font-weight: 500;
+      color: var(--subtext);
+    }
+
+    .dividend-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dividend-row {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .dividend-row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dividend-stock-name {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .dividend-stock-qty {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .dividend-row-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .input-group {
+      display: flex;
+      align-items: center;
+      background: #fff;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 6px 10px;
+      flex: 1;
+    }
+
+    .input-group input {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 0.92rem;
+      font-weight: 700;
+      text-align: right;
+      color: var(--text);
+      background: transparent;
+    }
+
+    .input-unit {
+      font-size: 0.8rem;
+      color: var(--subtext);
+      margin-left: 4px;
+      white-space: nowrap;
+    }
+
+    .row-subtotal {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text);
+      min-width: 105px;
+      text-align: right;
+    }
+
+    /* 확정 카드 내부 총 배당금 금액란 */
+    .confirm-total-box {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: #ffffff;
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .confirm-total-label {
+      font-size: 0.8rem;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .confirm-total-amount {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-align: right;
+      color: #38bdf8;
+    }
+
+    .total-box {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      color: #ffffff;
+      border-radius: 18px;
+      padding: 18px 16px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .total-label {
+      font-size: 0.85rem;
+      color: #cbd5e1;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .total-amount {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-align: right;
+      color: #38bdf8;
+    }
+
+    .confirm-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .month-input {
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .confirm-btn {
+      flex: 1;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.95rem;
+      font-weight: 800;
+      background: var(--success);
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    .confirm-btn:active {
+      transform: scale(0.98);
+    }
+
+    .confirm-message {
+      font-size: 0.78rem;
+      color: var(--success);
+      font-weight: 700;
+      min-height: 18px;
+    }
+
+    .history-item {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fafafa;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-month {
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .history-total {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary-dark);
+    }
+
+    .history-detail {
+      font-size: 0.78rem;
+      color: var(--subtext);
+      line-height: 1.45;
+    }
+
+    .history-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .delete-btn {
+      border: 1px solid #fecaca;
+      background: var(--danger-light);
+      color: var(--danger);
+      border-radius: 7px;
+      padding: 4px 9px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 12px;
+      color: var(--subtext);
+      font-size: 0.85rem;
+    }
+
+    /* 커스텀 확인 모달 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #ffffff;
+      border-radius: 18px;
+      max-width: 320px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .modal-desc {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--subtext);
+      line-height: 1.45;
+    }
+
+    .modal-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .modal-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .modal-btn.cancel {
+      background: #f3f4f6;
+      color: var(--text);
+    }
+
+    .modal-btn.confirm-danger {
+      background: var(--danger);
+      color: #ffffff;
+    }
+
+    .modal-btn.confirm-success {
+      background: var(--success);
+      color: #ffffff;
+    }
+
+    @media (max-width: 360px) {
+      .circle-dial {
+        width: 148px;
+        height: 148px;
+      }
+      .dial-number {
+        font-size: 1.75rem;
+      }
+      .step-controls {
+        width: 112px;
+      }
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-900 min-h-screen flex justify-center">
-  <!-- 모바일 최적화 메인 컨테이너 -->
-  <div class="w-full max-w-[480px] min-h-screen px-3.5 pt-4 pb-12 flex flex-col gap-3.5">
-    
-    <!-- 상단 헤더 -->
-    <header class="flex justify-between items-center px-0.5 py-1">
-      <h1 class="text-xl font-extrabold tracking-tight text-slate-900 flex items-center gap-1.5">
-        <span>📈</span>
-        <span>배당주 적립기</span>
-      </h1>
-      <button 
-        type="button" 
-        id="headerResetBtn"
-        onclick="openResetModal()" 
-        class="bg-white border border-slate-200 text-slate-500 hover:text-slate-700 active:bg-slate-100 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition"
-      >
-        초기화
-      </button>
+<body>
+  <div class="app">
+    <header>
+      <h1>📈 배당주 적립기</h1>
+      <button type="button" class="reset-btn" onclick="openModal('reset')">전체 초기화</button>
     </header>
 
-    <!-- 상단 메인 메뉴 탭 (적립기 / 월별 확정 내역) -->
-    <nav class="grid grid-cols-2 gap-1.5 bg-slate-200/80 p-1 rounded-xl" aria-label="메인 메뉴">
-      <button
-        type="button"
-        id="navTabAccumulator"
-        onclick="switchMainTab('accumulator')"
-        class="py-2.5 px-3 rounded-lg text-xs font-extrabold transition bg-white text-blue-600 shadow-xs"
-      >
-        📊 적립기
-      </button>
-      <button
-        type="button"
-        id="navTabHistory"
-        onclick="switchMainTab('history')"
-        class="py-2.5 px-3 rounded-lg text-xs font-extrabold transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5"
-      >
-        <span>📅 월별 확정 내역</span>
-        <span id="historyBadge" class="bg-blue-600 text-white text-[10px] px-1.5 py-0.2 rounded-full hidden">0</span>
-      </button>
-    </nav>
+    <div class="nav-tabs">
+      <button type="button" class="nav-btn active" id="nav-tracker" onclick="switchView('tracker')">📊 적립기</button>
+      <button type="button" class="nav-btn" id="nav-history" onclick="switchView('history')">📅 월별 확정 내역</button>
+    </div>
 
-    <!-- [뷰 1] 배당주 적립기 메인 화면 -->
-    <main id="accumulatorView" class="flex flex-col gap-3.5">
-      <!-- 상단 3개 종목 구분 탭 (선택 + 종목명 직접 수정) -->
-      <section id="tabs" class="grid grid-cols-3 gap-2" aria-label="배당주 종목 선택"></section>
+    <div class="view active" id="view-tracker">
+      <!-- 상단 3개 종목 구분 (공란 + 직접 입력 후 우측 원형 체크 버튼 클릭 시 전체 연동) -->
+      <div class="tabs" id="tabs"></div>
 
-      <!-- 가운데 메인 카운터 카드 -->
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3.5">
-        <!-- 현재 선택된 종목명 배너 -->
-        <div 
-          id="selectedTitle" 
-          class="text-center text-sm font-bold text-blue-700 bg-blue-50 py-2 px-3 rounded-xl break-keep"
-        ></div>
-
-        <!-- 원형 숫자판 + 오른쪽 증감 버튼 -->
-        <div class="flex items-center justify-between gap-2.5">
-          <!-- 커다란 원형 숫자판 -->
-          <div class="flex-1 flex flex-col items-center justify-center">
-            <button 
-              type="button"
-              id="circleDial"
-              onclick="changeCount(1)"
-              class="circle-dial-btn w-40 h-40 sm:w-44 sm:h-44 rounded-full text-white border-[6px] border-blue-100 flex flex-col items-center justify-center p-2.5 select-none cursor-pointer focus:outline-none"
-            >
-              <span class="text-xs text-blue-100 font-medium mb-0.5">보유 수량</span>
-              <span id="dialNumber" class="text-3xl sm:text-4xl font-extrabold leading-tight tracking-tight break-all text-center">0</span>
-              <span class="text-[11px] font-semibold mt-1.5 bg-white/20 px-2.5 py-0.5 rounded-full">터치 +1주</span>
-            </button>
+      <!-- 가운데 원형 숫자판 및 우측 증감 버튼 -->
+      <div class="counter-card">
+        <div class="selected-title" id="selectedTitle"></div>
+        <div class="counter-body">
+          <div class="circle-wrap">
+            <div class="circle-dial" id="circleDial" onclick="changeCount(1)">
+              <span class="dial-label">보유 수량</span>
+              <span class="dial-number" id="dialNumber">0</span>
+              <span class="dial-hint">터치 +1주</span>
+            </div>
           </div>
 
-          <!-- 오른쪽 단위별 증가 / 감소 버튼 -->
-          <div class="grid grid-cols-2 gap-1.5 w-[124px] shrink-0">
-            <!-- 증가 컬럼 (+1 ~ +1000) -->
-            <div class="flex flex-col gap-1.5">
-              <button type="button" onclick="changeCount(1)" class="bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-700 border border-blue-200 rounded-lg py-2 px-1 text-xs font-bold transition">+1</button>
-              <button type="button" onclick="changeCount(10)" class="bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-700 border border-blue-200 rounded-lg py-2 px-1 text-xs font-bold transition">+10</button>
-              <button type="button" onclick="changeCount(100)" class="bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-700 border border-blue-200 rounded-lg py-2 px-1 text-xs font-bold transition">+100</button>
-              <button type="button" onclick="changeCount(1000)" class="bg-blue-50 hover:bg-blue-100 active:scale-95 text-blue-700 border border-blue-200 rounded-lg py-2 px-1 text-xs font-bold transition">+1000</button>
+          <div class="step-controls">
+            <div class="step-col">
+              <button type="button" class="step-btn plus" onclick="changeCount(1)">+1</button>
+              <button type="button" class="step-btn plus" onclick="changeCount(10)">+10</button>
+              <button type="button" class="step-btn plus" onclick="changeCount(100)">+100</button>
+              <button type="button" class="step-btn plus" onclick="changeCount(1000)">+1000</button>
             </div>
-            <!-- 감소 컬럼 (-1 ~ -1000) -->
-            <div class="flex flex-col gap-1.5">
-              <button type="button" onclick="changeCount(-1)" class="bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 rounded-lg py-2 px-1 text-xs font-bold transition">-1</button>
-              <button type="button" onclick="changeCount(-10)" class="bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 rounded-lg py-2 px-1 text-xs font-bold transition">-10</button>
-              <button type="button" onclick="changeCount(-100)" class="bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 rounded-lg py-2 px-1 text-xs font-bold transition">-100</button>
-              <button type="button" onclick="changeCount(-1000)" class="bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 border border-red-200 rounded-lg py-2 px-1 text-xs font-bold transition">-1000</button>
+            <div class="step-col">
+              <button type="button" class="step-btn minus" onclick="changeCount(-1)">-1</button>
+              <button type="button" class="step-btn minus" onclick="changeCount(-10)">-10</button>
+              <button type="button" class="step-btn minus" onclick="changeCount(-100)">-100</button>
+              <button type="button" class="step-btn minus" onclick="changeCount(-1000)">-1000</button>
             </div>
           </div>
         </div>
-      </section>
-
-      <!-- 하단 종목별 이달의 배당금 입력 카드 -->
-      <section class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col gap-3">
-        <div class="flex justify-between items-center">
-          <h2 class="text-sm font-extrabold text-slate-900">💰 종목별 이달의 1주당 배당금</h2>
-          <span class="text-[11px] font-medium text-slate-400">자동 저장됨</span>
-        </div>
-        <div id="dividendList" class="flex flex-col gap-2.5"></div>
-      </section>
-
-      <!-- 최하단 이달의 배당금 * 주식갯수 총 합계 및 확정 박스 -->
-      <section class="bg-gradient-to-br from-slate-800 to-slate-950 text-white rounded-2xl p-4 shadow-md flex flex-col gap-3">
-        <div class="flex flex-col gap-1">
-          <div class="flex justify-between items-center text-xs text-slate-300 font-medium">
-            <span>이달의 예상 총 배당금</span>
-            <span id="totalSharesText" class="bg-white/10 px-2 py-0.5 rounded-md text-slate-200">총 0주</span>
-          </div>
-          <div id="totalDividend" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-right text-sky-400">
-            0원
-          </div>
-        </div>
-
-        <!-- 귀속 월 선택 및 확정 버튼 -->
-        <div class="pt-2.5 border-t border-slate-700/80 flex flex-col gap-2">
-          <div class="flex items-center justify-between gap-2">
-            <label for="targetMonthInput" class="text-xs font-semibold text-slate-300 shrink-0">확정 귀속월</label>
-            <input
-              type="month"
-              id="targetMonthInput"
-              class="bg-slate-800 border border-slate-600 text-white text-xs font-bold rounded-lg px-2.5 py-1.5 outline-none focus:border-sky-400"
-            />
-          </div>
-          <button
-            type="button"
-            onclick="handleConfirmClick()"
-            class="w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white text-sm font-extrabold shadow-lg shadow-blue-950/50 transition flex items-center justify-center gap-1.5 cursor-pointer"
-          >
-            <span>✅</span>
-            <span>이달의 배당금 확정하기</span>
-          </button>
-        </div>
-      </section>
-    </main>
-
-    <!-- [뷰 2] 월별 확정 내역 화면 -->
-    <main id="historyView" class="hidden flex-col gap-3.5">
-      <!-- 누적 확정 배당금 요약 카드 -->
-      <section class="bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-2xl p-4 shadow-md flex flex-col gap-1.5">
-        <div class="flex justify-between items-center text-xs text-blue-100 font-medium">
-          <span>누적 확정 총 배당금</span>
-          <span id="historyMonthCount" class="bg-white/20 px-2.5 py-0.5 rounded-full font-bold">총 0개월 기록</span>
-        </div>
-        <div id="cumulativeDividend" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-right text-white">
-          0원
-        </div>
-      </section>
-
-      <!-- 월별 확정 카드 리스트 -->
-      <section id="historyList" class="flex flex-col gap-3"></section>
-    </main>
-
-  </div>
-
-  <!-- 토스트 알림 메시지 -->
-  <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900/95 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl opacity-0 pointer-events-none transition-opacity duration-200 z-50 flex items-center gap-2 whitespace-nowrap">
-    <span id="toastIcon">✅</span>
-    <span id="toastMessage">저장되었습니다.</span>
-  </div>
-
-  <!-- 커스텀 초기화 확인 모달 -->
-  <div id="resetModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <h3 class="text-base font-extrabold text-slate-900">적립기 입력 초기화</h3>
-        <p class="text-xs text-slate-500 leading-relaxed">
-          현재 적립기의 보유 수량과 배당금 입력값이 초기화됩니다. (이미 확정된 월별 내역은 유지됩니다.)
-        </p>
       </div>
-      <div class="grid grid-cols-2 gap-2">
-        <button 
-          type="button" 
-          onclick="closeResetModal()" 
-          class="py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold active:bg-slate-200 transition"
-        >
-          취소
-        </button>
-        <button 
-          type="button" 
-          onclick="confirmResetAll()" 
-          class="py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold active:bg-red-700 transition"
-        >
-          초기화 실행
-        </button>
+
+      <!-- 이달의 배당금 확정 (종목별 1주당 배당금 입력 + 총 금액란 + 이번 달 확정 버튼 통합) -->
+      <div class="confirm-card">
+        <h2 class="section-title">
+          <span>✅ 이달의 배당금 확정</span>
+          <span class="section-sub">자동 저장 · 월별 기록</span>
+        </h2>
+
+        <div class="dividend-list" id="dividendList"></div>
+
+        <div class="confirm-total-box">
+          <div class="confirm-total-label">
+            <span>확정 예정 배당금액</span>
+            <span id="totalSharesText">총 0주</span>
+          </div>
+          <div class="confirm-total-amount" id="totalDividend">0원</div>
+        </div>
+
+        <div class="confirm-row">
+          <input type="month" class="month-input" id="targetMonthInput" onchange="onTargetMonthChange()" />
+          <button type="button" class="confirm-btn" onclick="confirmMonthlyDividend()">이번 달 확정</button>
+        </div>
+        <div class="confirm-message" id="confirmMessage"></div>
+      </div>
+    </div>
+
+    <div class="view" id="view-history">
+      <div class="total-box">
+        <div class="total-label">
+          <span>누적 확정 배당금 합계</span>
+          <span id="historyCountText">0개월 기록</span>
+        </div>
+        <div class="total-amount" id="cumulativeDividend">0원</div>
+      </div>
+
+      <div class="history-card">
+        <h2 class="section-title">
+          <span>📅 월별 확정 배당금 정리</span>
+          <span class="section-sub">최신순</span>
+        </h2>
+        <div id="historyList"></div>
       </div>
     </div>
   </div>
 
-  <!-- 중복 월 덮어쓰기 확인 모달 -->
-  <div id="overwriteModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <h3 class="text-base font-extrabold text-slate-900">이미 확정된 월입니다</h3>
-        <p id="overwriteDesc" class="text-xs text-slate-500 leading-relaxed">
-          해당 월의 확정 배당금 내역이 이미 존재합니다. 현재 금액으로 덮어쓸까요?
-        </p>
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <button 
-          type="button" 
-          onclick="closeOverwriteModal()" 
-          class="py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold active:bg-slate-200 transition"
-        >
-          취소
-        </button>
-        <button 
-          type="button" 
-          onclick="executeConfirmSave()" 
-          class="py-2.5 rounded-xl bg-blue-600 text-white text-xs font-bold active:bg-blue-700 transition"
-        >
-          덮어쓰기
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 월별 기록 개별 삭제 확인 모달 -->
-  <div id="deleteHistoryModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs hidden items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-2xl max-w-xs w-full p-5 shadow-xl flex flex-col gap-4">
-      <div class="flex flex-col gap-1">
-        <h3 class="text-base font-extrabold text-slate-900">확정 내역 삭제</h3>
-        <p id="deleteHistoryDesc" class="text-xs text-slate-500 leading-relaxed">
-          선택한 월의 확정 배당금 내역을 삭제할까요?
-        </p>
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <button 
-          type="button" 
-          onclick="closeDeleteHistoryModal()" 
-          class="py-2.5 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold active:bg-slate-200 transition"
-        >
-          취소
-        </button>
-        <button 
-          type="button" 
-          onclick="executeDeleteHistory()" 
-          class="py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold active:bg-red-700 transition"
-        >
-          삭제하기
-        </button>
+  <!-- 커스텀 확인 모달 -->
+  <div class="modal-backdrop" id="confirmModal">
+    <div class="modal-card">
+      <h3 class="modal-title" id="modalTitle">확인</h3>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-actions">
+        <button type="button" class="modal-btn cancel" onclick="closeModal()">취소</button>
+        <button type="button" class="modal-btn confirm-danger" id="modalConfirmBtn">확인</button>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = "dividend_accumulator_v2";
+    const STORAGE_KEY = "dividend_accumulator_v3";
 
     // 현재 연월(YYYY-MM) 반환
     function getCurrentYearMonth() {
@@ -292,46 +764,42 @@
       return `${y}-${m}`;
     }
 
-    // YYYY-MM 문자열을 'YYYY년 M월' 형태로 변환
-    function formatKoreanMonth(ym) {
-      if (!ym || !ym.includes("-")) return ym;
-      const [y, m] = ym.split("-");
-      return `${y}년 ${parseInt(m, 10)}월`;
-    }
-
-    // 초기 기본 데이터 (3개 커버드콜 종목 + 월별 확정 내역 배열)
+    // 기본 초기 상태 (구분 1~3 공란)
     const defaultData = {
+      activeView: "tracker",
       selectedIndex: 0,
+      targetMonth: getCurrentYearMonth(),
       stocks: [
-        { name: "코스피200타겟위클리커버드콜", count: 0, dividend: 0 },
-        { name: "미국S&P500타겟데일리커버드콜", count: 0, dividend: 0 },
-        { name: "미국나스닥100타겟데일리커버드콜", count: 0, dividend: 0 }
+        { name: "", draftName: "", count: 0, dividend: 0 },
+        { name: "", draftName: "", count: 0, dividend: 0 },
+        { name: "", draftName: "", count: 0, dividend: 0 }
       ],
-      history: []
+      confirmedMonths: []
     };
 
     let state = loadState();
-    let currentMainTab = "accumulator";
-    let pendingDeleteMonth = null;
-    let toastTimer = null;
 
-    // localStorage에서 상태 불러오기 (이전 버전 데이터 호환 포함)
+    // localStorage에서 상태 불러오기
     function loadState() {
       try {
-        const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem("dividend_accumulator_v1");
+        const saved = localStorage.getItem(STORAGE_KEY);
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed && Array.isArray(parsed.stocks) && parsed.stocks.length === 3) {
             return {
-              selectedIndex: typeof parsed.selectedIndex === "number" ? parsed.selectedIndex : 0,
-              stocks: parsed.stocks,
-              history: Array.isArray(parsed.history) ? parsed.history : []
+              ...defaultData,
+              ...parsed,
+              stocks: parsed.stocks.map((s) => ({
+                name: s.name || "",
+                draftName: typeof s.draftName === "string" ? s.draftName : (s.name || ""),
+                count: Number(s.count) || 0,
+                dividend: Number(s.dividend) || 0
+              })),
+              confirmedMonths: Array.isArray(parsed.confirmedMonths) ? parsed.confirmedMonths : []
             };
           }
         }
-      } catch (e) {
-        console.error("저장된 데이터 로드 실패:", e);
-      }
+      } catch (e) {}
       return JSON.parse(JSON.stringify(defaultData));
     }
 
@@ -339,88 +807,51 @@
     function saveState() {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {
-        console.error("데이터 저장 실패:", e);
-      }
+      } catch (e) {}
     }
 
-    // 토스트 알림 표시
-    function showToast(message, icon = "✅") {
-      const toast = document.getElementById("toast");
-      document.getElementById("toastIcon").textContent = icon;
-      document.getElementById("toastMessage").textContent = message;
-      toast.classList.remove("opacity-0");
-      toast.classList.add("opacity-100");
-      if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove("opacity-100");
-        toast.classList.add("opacity-0");
-      }, 2400);
+    // 천 단위 콤마 포맷
+    function formatNumber(num) {
+      return Math.round(num).toLocaleString("ko-KR");
     }
 
-    // 상단 메인 탭 전환 ('accumulator' | 'history')
-    function switchMainTab(tab) {
-      currentMainTab = tab;
-      const accView = document.getElementById("accumulatorView");
-      const histView = document.getElementById("historyView");
-      const navAcc = document.getElementById("navTabAccumulator");
-      const navHist = document.getElementById("navTabHistory");
-      const resetBtn = document.getElementById("headerResetBtn");
-
-      if (tab === "accumulator") {
-        accView.classList.remove("hidden");
-        accView.classList.add("flex");
-        histView.classList.add("hidden");
-        histView.classList.remove("flex");
-
-        navAcc.className = "py-2.5 px-3 rounded-lg text-xs font-extrabold transition bg-white text-blue-600 shadow-xs";
-        navHist.className = "py-2.5 px-3 rounded-lg text-xs font-extrabold transition text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5";
-        resetBtn.classList.remove("invisible");
-        render();
-      } else {
-        accView.classList.add("hidden");
-        accView.classList.remove("flex");
-        histView.classList.remove("hidden");
-        histView.classList.add("flex");
-
-        navHist.className = "py-2.5 px-3 rounded-lg text-xs font-extrabold transition bg-white text-blue-600 shadow-xs flex items-center justify-center gap-1.5";
-        navAcc.className = "py-2.5 px-3 rounded-lg text-xs font-extrabold transition text-slate-600 hover:text-slate-900";
-        resetBtn.classList.add("invisible");
-        renderHistory();
-      }
+    // 확정된 종목 표시명 반환 (미입력 시 '구분 1~3')
+    function getDisplayName(stock, index) {
+      const trimmed = (stock.name || "").trim();
+      return trimmed ? trimmed : `구분 ${index + 1}`;
     }
 
-    // 상단 배지 업데이트
-    function updateHistoryBadge() {
-      const badge = document.getElementById("historyBadge");
-      if (state.history.length > 0) {
-        badge.textContent = state.history.length;
-        badge.classList.remove("hidden");
-      } else {
-        badge.classList.add("hidden");
-      }
+    // 상단 탭 전환 ('tracker' | 'history')
+    function switchView(viewName) {
+      state.activeView = viewName;
+      saveState();
+      render();
     }
 
-    // 상단 종목 구분 탭 선택
+    // 구분 카드 선택
     function selectStock(index) {
       state.selectedIndex = index;
       saveState();
       render();
     }
 
-    // 종목명 직접 수정
-    function updateName(index, value) {
-      state.stocks[index].name = value;
+    // 입력 중인 임시 텍스트 갱신
+    function updateDraftName(index, value) {
+      state.stocks[index].draftName = value;
       saveState();
-      const current = state.stocks[state.selectedIndex];
-      document.getElementById("selectedTitle").textContent = current.name || `종목 ${state.selectedIndex + 1}`;
-      const nameLabels = document.querySelectorAll(".dividend-stock-name");
-      if (nameLabels[index]) {
-        nameLabels[index].textContent = value || `종목 ${index + 1}`;
-      }
     }
 
-    // 보유 주식 수량 증감 (0 미만 방지)
+    // 원형 체크 버튼 클릭 시 확정 종목명 반영 및 전체 연동
+    function confirmStockName(index) {
+      const inputEl = document.getElementById(`name-input-${index}`);
+      const val = inputEl ? inputEl.value.trim() : (state.stocks[index].draftName || "").trim();
+      state.stocks[index].draftName = val;
+      state.stocks[index].name = val;
+      saveState();
+      render();
+    }
+
+    // 선택 종목 수량 증감
     function changeCount(delta) {
       const stock = state.stocks[state.selectedIndex];
       stock.count = Math.max(0, stock.count + delta);
@@ -436,130 +867,109 @@
       renderTotalsOnly();
     }
 
-    // 이달의 배당금 확정 버튼 클릭 처리
-    function handleConfirmClick() {
-      const monthInput = document.getElementById("targetMonthInput");
-      const targetMonth = monthInput.value || getCurrentYearMonth();
+    // 확정 연월 변경
+    function onTargetMonthChange() {
+      const val = document.getElementById("targetMonthInput").value;
+      if (val) {
+        state.targetMonth = val;
+        saveState();
+      }
+    }
 
-      // 기존 동일 월 기록 존재 여부 확인
-      const existing = state.history.find(item => item.month === targetMonth);
-      if (existing) {
-        document.getElementById("overwriteDesc").textContent =
-          `${formatKoreanMonth(targetMonth)} 확정 내역(${formatNumber(existing.totalDividend)}원)이 이미 있습니다. 현재 내용으로 덮어쓸까요?`;
-        const modal = document.getElementById("overwriteModal");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
+    // 커스텀 확인 모달 열기
+    function openModal(type, payload = null) {
+      const modal = document.getElementById("confirmModal");
+      const titleEl = document.getElementById("modalTitle");
+      const descEl = document.getElementById("modalDesc");
+      const btnEl = document.getElementById("modalConfirmBtn");
+
+      if (type === "reset") {
+        titleEl.textContent = "전체 초기화";
+        descEl.textContent = "모든 종목명, 수량, 배당금 및 월별 확정 내역을 초기화할까요?";
+        btnEl.textContent = "초기화";
+        btnEl.className = "modal-btn confirm-danger";
+        btnEl.onclick = () => {
+          state = JSON.parse(JSON.stringify(defaultData));
+          saveState();
+          closeModal();
+          render();
+        };
+      } else if (type === "overwrite") {
+        const { record, existingIdx } = payload;
+        titleEl.textContent = "확정 내역 덮어쓰기";
+        descEl.textContent = `${record.month} 확정 배당금 기록이 이미 있습니다. ${formatNumber(record.totalDividend)}원으로 덮어쓸까요?`;
+        btnEl.textContent = "덮어쓰기";
+        btnEl.className = "modal-btn confirm-success";
+        btnEl.onclick = () => {
+          applyConfirmedRecord(record, existingIdx);
+          closeModal();
+        };
+      } else if (type === "delete") {
+        const month = payload;
+        titleEl.textContent = "확정 내역 삭제";
+        descEl.textContent = `${month} 확정 내역을 삭제할까요?`;
+        btnEl.textContent = "삭제";
+        btnEl.className = "modal-btn confirm-danger";
+        btnEl.onclick = () => {
+          state.confirmedMonths = state.confirmedMonths.filter((m) => m.month !== month);
+          saveState();
+          closeModal();
+          renderHistory();
+        };
+      }
+
+      modal.classList.add("open");
+    }
+
+    function closeModal() {
+      document.getElementById("confirmModal").classList.remove("open");
+    }
+
+    // 이번 달 확정 버튼 클릭
+    function confirmMonthlyDividend() {
+      const month = state.targetMonth || getCurrentYearMonth();
+      const items = state.stocks.map((s, idx) => ({
+        name: getDisplayName(s, idx),
+        count: s.count,
+        dividend: s.dividend,
+        subtotal: s.count * s.dividend
+      }));
+      const totalDividend = items.reduce((acc, item) => acc + item.subtotal, 0);
+      const totalShares = items.reduce((acc, item) => acc + item.count, 0);
+
+      const record = {
+        month,
+        totalDividend,
+        totalShares,
+        items,
+        confirmedAt: new Date().toLocaleString("ko-KR")
+      };
+
+      const existingIdx = state.confirmedMonths.findIndex((m) => m.month === month);
+      if (existingIdx >= 0) {
+        openModal("overwrite", { record, existingIdx });
         return;
       }
 
-      executeConfirmSave();
+      applyConfirmedRecord(record, -1);
     }
 
-    function closeOverwriteModal() {
-      const modal = document.getElementById("overwriteModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    }
-
-    // 실제 월별 확정 데이터 저장 실행
-    function executeConfirmSave() {
-      closeOverwriteModal();
-      const monthInput = document.getElementById("targetMonthInput");
-      const targetMonth = monthInput.value || getCurrentYearMonth();
-
-      let totalDividend = 0;
-      let totalShares = 0;
-
-      const snapshotStocks = state.stocks.map((stock, idx) => {
-        const subtotal = stock.count * stock.dividend;
-        totalDividend += subtotal;
-        totalShares += stock.count;
-        return {
-          name: stock.name || `종목 ${idx + 1}`,
-          count: stock.count,
-          dividend: stock.dividend,
-          subtotal: subtotal
-        };
-      });
-
-      const newRecord = {
-        month: targetMonth,
-        totalDividend: totalDividend,
-        totalShares: totalShares,
-        stocks: snapshotStocks,
-        confirmedAt: new Date().toISOString()
-      };
-
-      // 기존 동일 월 교체 또는 신규 추가 후 최신월 순 정렬
-      const idx = state.history.findIndex(item => item.month === targetMonth);
-      if (idx >= 0) {
-        state.history[idx] = newRecord;
+    function applyConfirmedRecord(record, existingIdx) {
+      if (existingIdx >= 0) {
+        state.confirmedMonths[existingIdx] = record;
       } else {
-        state.history.push(newRecord);
+        state.confirmedMonths.push(record);
       }
-      state.history.sort((a, b) => b.month.localeCompare(a.month));
 
+      state.confirmedMonths.sort((a, b) => b.month.localeCompare(a.month));
       saveState();
-      updateHistoryBadge();
-      showToast(`${formatKoreanMonth(targetMonth)} 배당금(${formatNumber(totalDividend)}원) 확정 완료!`);
+
+      document.getElementById("confirmMessage").textContent =
+        `${record.month} 배당금 ${formatNumber(record.totalDividend)}원으로 확정되었습니다.`;
+      renderHistory();
     }
 
-    // 월별 내역 개별 삭제 모달
-    function openDeleteHistoryModal(month) {
-      pendingDeleteMonth = month;
-      document.getElementById("deleteHistoryDesc").textContent =
-        `${formatKoreanMonth(month)}의 확정 배당금 기록을 삭제할까요?`;
-      const modal = document.getElementById("deleteHistoryModal");
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-    }
-
-    function closeDeleteHistoryModal() {
-      pendingDeleteMonth = null;
-      const modal = document.getElementById("deleteHistoryModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    }
-
-    function executeDeleteHistory() {
-      if (pendingDeleteMonth) {
-        state.history = state.history.filter(item => item.month !== pendingDeleteMonth);
-        saveState();
-        updateHistoryBadge();
-        renderHistory();
-        showToast("확정 내역이 삭제되었습니다.", "🗑️");
-      }
-      closeDeleteHistoryModal();
-    }
-
-    // 초기화 모달 제어
-    function openResetModal() {
-      const modal = document.getElementById("resetModal");
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-    }
-
-    function closeResetModal() {
-      const modal = document.getElementById("resetModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    }
-
-    function confirmResetAll() {
-      state.selectedIndex = 0;
-      state.stocks = JSON.parse(JSON.stringify(defaultData.stocks));
-      saveState();
-      closeResetModal();
-      render();
-      showToast("적립기 입력값이 초기화되었습니다.", "🔄");
-    }
-
-    // 천 단위 콤마 포맷
-    function formatNumber(num) {
-      return Math.round(num).toLocaleString("ko-KR");
-    }
-
-    // 소계 및 총 합계만 즉시 갱신 (입력창 포커스 유지용)
+    // 소계 및 총 합계만 즉시 갱신
     function renderTotalsOnly() {
       let totalDiv = 0;
       let totalShares = 0;
@@ -578,169 +988,123 @@
       document.getElementById("totalDividend").textContent = `${formatNumber(totalDiv)}원`;
     }
 
-    // [뷰 1] 적립기 화면 렌더링
+    // 월별 확정 내역 렌더링
+    function renderHistory() {
+      const listEl = document.getElementById("historyList");
+      const cumEl = document.getElementById("cumulativeDividend");
+      const countEl = document.getElementById("historyCountText");
+
+      const cumulative = state.confirmedMonths.reduce((sum, r) => sum + r.totalDividend, 0);
+      cumEl.textContent = `${formatNumber(cumulative)}원`;
+      countEl.textContent = `${state.confirmedMonths.length}개월 기록`;
+
+      if (state.confirmedMonths.length === 0) {
+        listEl.innerHTML = `<div class="empty-state">아직 확정된 월별 배당금 내역이 없습니다.<br />적립기 하단에서 배당금을 확정해 보세요.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = "";
+      state.confirmedMonths.forEach((rec) => {
+        const lines = rec.items
+          .map((it) => `• ${it.name}: ${formatNumber(it.count)}주 × ${formatNumber(it.dividend)}원 = ${formatNumber(it.subtotal)}원`)
+          .join("<br />");
+
+        const itemDiv = document.createElement("div");
+        itemDiv.className = "history-item";
+        itemDiv.innerHTML = `
+          <div class="history-top">
+            <span class="history-month">${rec.month}</span>
+            <span class="history-total">${formatNumber(rec.totalDividend)}원</span>
+          </div>
+          <div class="history-detail">${lines}</div>
+          <div class="history-actions">
+            <button type="button" class="delete-btn" onclick="openModal('delete', '${rec.month}')">삭제</button>
+          </div>
+        `;
+        listEl.appendChild(itemDiv);
+      });
+    }
+
+    // 전체 화면 렌더링
     function render() {
+      document.getElementById("nav-tracker").classList.toggle("active", state.activeView === "tracker");
+      document.getElementById("nav-history").classList.toggle("active", state.activeView === "history");
+      document.getElementById("view-tracker").classList.toggle("active", state.activeView === "tracker");
+      document.getElementById("view-history").classList.toggle("active", state.activeView === "history");
+
+      document.getElementById("targetMonthInput").value = state.targetMonth || getCurrentYearMonth();
+
       const tabsEl = document.getElementById("tabs");
       tabsEl.innerHTML = "";
 
       state.stocks.forEach((stock, idx) => {
         const isActive = idx === state.selectedIndex;
         const card = document.createElement("div");
-        card.className = `rounded-2xl p-2.5 cursor-pointer transition flex flex-col justify-between gap-1.5 border-2 shadow-2xs ${
-          isActive
-            ? "border-blue-600 bg-blue-50/80"
-            : "border-slate-200 bg-white hover:border-slate-300"
-        }`;
+        card.className = `tab-card ${isActive ? "active" : ""}`;
         card.onclick = () => selectStock(idx);
 
-        const escapedName = stock.name.replace(/"/g, "&quot;");
         card.innerHTML = `
-          <div class="flex justify-between items-center text-[11px] font-bold text-blue-600">
+          <div class="tab-badge">
             <span>구분 ${idx + 1}</span>
             <span>${isActive ? "●" : ""}</span>
           </div>
-          <input
-            type="text"
-            value="${escapedName}"
-            placeholder="종목명 입력"
-            aria-label="구분 ${idx + 1} 종목명"
-            onclick="event.stopPropagation(); if(state.selectedIndex !== ${idx}) selectStock(${idx});"
-            oninput="updateName(${idx}, this.value)"
-            class="w-full bg-transparent text-xs font-bold text-slate-900 py-0.5 leading-snug outline-none border-b border-dashed ${
-              isActive ? "focus:border-blue-600 focus:bg-white/80 rounded-xs" : "border-transparent"
-            }"
-          />
-          <div class="text-xs font-extrabold text-slate-800">${formatNumber(stock.count)}주</div>
+          <div class="tab-name-edit" onclick="event.stopPropagation(); selectStock(${idx});">
+            <input
+              type="text"
+              id="name-input-${idx}"
+              class="tab-name-input"
+              value="${(stock.draftName || "").replace(/"/g, "&quot;")}"
+              placeholder="종목명 입력"
+              oninput="updateDraftName(${idx}, this.value)"
+              onkeydown="if(event.key==='Enter'){ event.preventDefault(); confirmStockName(${idx}); }"
+            />
+            <button type="button" class="tab-apply-btn" aria-label="종목명 확정" title="종목명 확정" onclick="confirmStockName(${idx})">✓</button>
+          </div>
+          <div class="tab-count">${formatNumber(stock.count)}주</div>
         `;
         tabsEl.appendChild(card);
       });
 
-      // 선택된 종목 타이틀 및 원형 숫자판 업데이트
       const current = state.stocks[state.selectedIndex];
-      document.getElementById("selectedTitle").textContent = current.name || `종목 ${state.selectedIndex + 1}`;
+      document.getElementById("selectedTitle").textContent = getDisplayName(current, state.selectedIndex);
       document.getElementById("dialNumber").textContent = formatNumber(current.count);
 
-      // 하단 종목별 배당금 입력 리스트 업데이트
       const divListEl = document.getElementById("dividendList");
       divListEl.innerHTML = "";
 
       state.stocks.forEach((stock, idx) => {
         const sub = stock.count * stock.dividend;
         const row = document.createElement("div");
-        row.className = "border border-slate-200 rounded-xl p-2.5 bg-slate-50/70 flex flex-col gap-2";
+        row.className = "dividend-row";
         row.innerHTML = `
-          <div class="flex justify-between items-center gap-2">
-            <span class="dividend-stock-name text-xs font-bold text-slate-800 truncate">${stock.name || `종목 ${idx + 1}`}</span>
-            <span class="text-xs font-bold text-blue-600 shrink-0">${formatNumber(stock.count)}주 보유</span>
+          <div class="dividend-row-top">
+            <span class="dividend-stock-name">${getDisplayName(stock, idx)}</span>
+            <span class="dividend-stock-qty">${formatNumber(stock.count)}주 보유</span>
           </div>
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center bg-white border border-slate-300 focus-within:border-blue-600 rounded-lg px-2.5 py-1.5 flex-1">
+          <div class="dividend-row-bottom">
+            <div class="input-group">
               <input
                 type="number"
                 inputmode="decimal"
                 min="0"
                 step="any"
-                placeholder="배당금 입력"
-                aria-label="${stock.name} 1주당 배당금"
+                placeholder="주당분배금 입력"
                 value="${stock.dividend === 0 ? "" : stock.dividend}"
                 oninput="updateDividend(${idx}, this.value)"
-                class="w-full border-none outline-none text-sm font-bold text-right text-slate-900 bg-transparent"
               />
-              <span class="text-xs text-slate-400 ml-1 shrink-0">원/주</span>
+              <span class="input-unit">원/주</span>
             </div>
-            <div id="subtotal-${idx}" class="text-sm font-extrabold text-slate-900 min-w-[96px] text-right">
-              ${formatNumber(sub)}원
-            </div>
+            <div class="row-subtotal" id="subtotal-${idx}">${formatNumber(sub)}원</div>
           </div>
         `;
         divListEl.appendChild(row);
       });
 
       renderTotalsOnly();
-      updateHistoryBadge();
+      renderHistory();
     }
 
-    // [뷰 2] 월별 확정 내역 화면 렌더링
-    function renderHistory() {
-      const listEl = document.getElementById("historyList");
-      const cumEl = document.getElementById("cumulativeDividend");
-      const countEl = document.getElementById("historyMonthCount");
-
-      const totalCumulative = state.history.reduce((acc, cur) => acc + cur.totalDividend, 0);
-      cumEl.textContent = `${formatNumber(totalCumulative)}원`;
-      countEl.textContent = `총 ${state.history.length}개월 기록`;
-
-      listEl.innerHTML = "";
-
-      if (state.history.length === 0) {
-        listEl.innerHTML = `
-          <div class="bg-white rounded-2xl p-8 border border-slate-200 text-center flex flex-col items-center gap-2.5 shadow-2xs">
-            <span class="text-3xl">📭</span>
-            <p class="text-sm font-bold text-slate-700">아직 확정된 월별 배당 내역이 없습니다.</p>
-            <p class="text-xs text-slate-400 leading-relaxed">
-              '적립기' 탭에서 보유 수량과 배당금을 입력한 뒤<br/>하단의 <strong>[이달의 배당금 확정하기]</strong> 버튼을 눌러보세요.
-            </p>
-            <button
-              type="button"
-              onclick="switchMainTab('accumulator')"
-              class="mt-1 bg-blue-50 text-blue-600 hover:bg-blue-100 text-xs font-extrabold px-4 py-2 rounded-xl transition"
-            >
-              적립기로 이동하기
-            </button>
-          </div>
-        `;
-        return;
-      }
-
-      state.history.forEach(record => {
-        const card = document.createElement("article");
-        card.className = "bg-white rounded-2xl p-4 border border-slate-200 shadow-2xs flex flex-col gap-3";
-
-        const stocksHtml = record.stocks.map(s => `
-          <div class="flex justify-between items-center text-xs py-1.5 border-b border-slate-100 last:border-b-0 gap-2">
-            <div class="flex flex-col min-w-0">
-              <span class="font-bold text-slate-800 truncate">${s.name}</span>
-              <span class="text-[11px] text-slate-400">${formatNumber(s.count)}주 × ${formatNumber(s.dividend)}원</span>
-            </div>
-            <span class="font-extrabold text-slate-900 shrink-0">${formatNumber(s.subtotal)}원</span>
-          </div>
-        `).join("");
-
-        card.innerHTML = `
-          <div class="flex justify-between items-start pb-2.5 border-b border-slate-100">
-            <div>
-              <span class="inline-block bg-blue-50 text-blue-700 text-xs font-extrabold px-2.5 py-1 rounded-lg">
-                ${formatKoreanMonth(record.month)}
-              </span>
-              <div class="text-[11px] text-slate-400 mt-1">총 보유수량 ${formatNumber(record.totalShares)}주</div>
-            </div>
-            <div class="flex flex-col items-end gap-1">
-              <span class="text-lg font-extrabold text-blue-600">${formatNumber(record.totalDividend)}원</span>
-              <button
-                type="button"
-                onclick="openDeleteHistoryModal('${record.month}')"
-                class="text-[11px] font-semibold text-slate-400 hover:text-red-500 transition px-1.5 py-0.5 rounded-md hover:bg-red-50"
-              >
-                삭제
-              </button>
-            </div>
-          </div>
-          <div class="flex flex-col">
-            ${stocksHtml}
-          </div>
-        `;
-        listEl.appendChild(card);
-      });
-    }
-
-    // 초기 렌더링 실행
-    window.addEventListener("DOMContentLoaded", () => {
-      const monthInput = document.getElementById("targetMonthInput");
-      if (monthInput) {
-        monthInput.value = getCurrentYearMonth();
-      }
-      render();
-    });
+    render();
   </script>
 </body>
 </html>
